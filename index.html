@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+  <meta name="apple-mobile-web-app-title" content="Water Tracker" />
+  <title>Water Tracker</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      color: #111;
+      min-height: 100vh;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #1a1a1a; color: #f0f0f0; }
+      .tab { color: #888; }
+      .tab.active { color: #378ADD; }
+      .stat { background: #2a2a2a; }
+      .stat-val { color: #f0f0f0; }
+      .stat-lbl { color: #888; }
+      .progress-bar { background: #2a2a2a; }
+      .progress-label { color: #888; }
+      .goal-row label { color: #888; }
+      .goal-row span { color: #888; }
+      .goal-row input[type="number"] { background: #2a2a2a; border-color: #444; color: #f0f0f0; }
+      .quick-add p { color: #888; }
+      .quick-btn { background: #2a2a2a; border-color: #444; color: #f0f0f0; }
+      .quick-btn:hover { background: #333; }
+      .custom-row input { background: #2a2a2a; border-color: #444; color: #f0f0f0; }
+      .log-header p { color: #888; }
+      .clear-btn { color: #888; }
+      .log-item { background: #2a2a2a; }
+      .log-item-oz { color: #f0f0f0; }
+      .log-item-time { color: #888; }
+      .log-remove { color: #888; }
+      .empty-log { color: #888; }
+      .chart-wrap { background: #2a2a2a; }
+      .chart-title { color: #888; }
+      .bar-label { color: #888; }
+      .bar-val { color: #888; }
+      .streak-card { background: #2a2a2a; }
+      .streak-lbl { color: #888; }
+      .legend-item { color: #888; }
+      .tabs { border-color: #333; }
+      .header h1 { color: #f0f0f0; }
+      .header p { color: #888; }
+    }
+
+    .app {
+      max-width: 480px;
+      margin: 0 auto;
+      background: #fff;
+      min-height: 100vh;
+    }
+    @media (prefers-color-scheme: dark) {
+      .app { background: #1a1a1a; }
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid #e5e5e5;
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 10;
+    }
+    @media (prefers-color-scheme: dark) {
+      .tabs { background: #1a1a1a; border-color: #333; }
+    }
+    .tab {
+      flex: 1;
+      padding: 14px;
+      text-align: center;
+      font-size: 15px;
+      font-weight: 500;
+      color: #555;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      background: none;
+      border-top: none; border-left: none; border-right: none;
+    }
+    .tab.active { color: #378ADD; border-bottom-color: #378ADD; }
+
+    .page { display: none; padding: 0 16px 40px; }
+    .page.active { display: block; }
+
+    .header { text-align: center; padding: 20px 0 8px; margin-bottom: 16px; }
+    .header h1 { font-size: 22px; font-weight: 600; color: #111; }
+    .header p { font-size: 13px; color: #888; margin-top: 4px; }
+    @media (prefers-color-scheme: dark) {
+      .header h1 { color: #f0f0f0; }
+    }
+
+    .figure-wrap { display: flex; justify-content: center; margin: 8px 0 20px; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .stat { background: #f5f5f5; border-radius: 10px; padding: 12px 8px; text-align: center; }
+    .stat-val { font-size: 22px; font-weight: 600; color: #111; }
+    .stat-lbl { font-size: 11px; color: #888; margin-top: 3px; }
+
+    .progress-bar { background: #e8e8e8; border-radius: 999px; height: 12px; overflow: hidden; margin-bottom: 6px; }
+    .progress-fill { height: 100%; border-radius: 999px; background: #378ADD; transition: width 0.4s ease; }
+    .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 20px; }
+
+    .goal-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .goal-row label { font-size: 14px; color: #666; white-space: nowrap; }
+    .goal-row input[type="number"] {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: #fff;
+      color: #111;
+      font-size: 15px;
+      padding: 10px 12px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .goal-row input[type="number"]:focus { border-color: #378ADD; }
+    .goal-row span { font-size: 14px; color: #666; }
+
+    .quick-add { margin-bottom: 16px; }
+    .quick-add p { font-size: 13px; color: #888; margin-bottom: 8px; }
+    .quick-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+    .quick-btn {
+      flex: 1;
+      min-width: 60px;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: #fff;
+      color: #111;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 12px 4px;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .quick-btn:hover { background: #f5f5f5; }
+    .quick-btn:active { transform: scale(0.96); background: #eee; }
+
+    .custom-row { display: flex; gap: 8px; margin-bottom: 20px; }
+    .custom-row input {
+      flex: 1;
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      background: #fff;
+      color: #111;
+      font-size: 15px;
+      padding: 12px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+    .custom-row input:focus { border-color: #378ADD; }
+    .custom-row button {
+      border: none;
+      border-radius: 10px;
+      background: #378ADD;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 500;
+      padding: 12px 18px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .custom-row button:active { opacity: 0.85; }
+
+    .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+    .log-header p { font-size: 14px; color: #888; }
+    .clear-btn { font-size: 13px; color: #888; background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+    .clear-btn:active { background: #eee; }
+
+    .log-list { display: flex; flex-direction: column; gap: 6px; }
+    .log-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #f5f5f5;
+      border-radius: 10px;
+      padding: 10px 14px;
+    }
+    .log-item-left { display: flex; align-items: center; gap: 10px; }
+    .log-drop {
+      width: 10px; height: 10px;
+      background: #378ADD;
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      flex-shrink: 0;
+    }
+    .log-item-oz { font-size: 15px; font-weight: 500; color: #111; }
+    .log-item-time { font-size: 13px; color: #888; }
+    .log-remove { font-size: 20px; background: none; border: none; cursor: pointer; color: #aaa; line-height: 1; padding: 0 2px; }
+
+    .empty-log { font-size: 14px; color: #aaa; text-align: center; padding: 20px 0; }
+
+    .goal-msg {
+      text-align: center;
+      font-size: 14px;
+      font-weight: 500;
+      color: #1D9E75;
+      padding: 10px;
+      margin-bottom: 12px;
+      border-radius: 10px;
+      background: #E1F5EE;
+      display: none;
+    }
+    .goal-msg.show { display: block; }
+
+    /* History */
+    .chart-wrap { background: #f5f5f5; border-radius: 14px; padding: 16px; margin-bottom: 16px; }
+    .chart-title { font-size: 13px; color: #888; margin-bottom: 12px; }
+    .chart-area { position: relative; height: 180px; display: flex; align-items: flex-end; gap: 6px; }
+    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+    .bar-outer { width: 100%; flex: 1; display: flex; align-items: flex-end; }
+    .bar-inner { width: 100%; border-radius: 4px 4px 0 0; background: #B5D4F4; transition: height 0.4s ease; min-height: 2px; }
+    .bar-inner.hit { background: #378ADD; }
+    .bar-label { font-size: 10px; color: #888; text-align: center; }
+    .bar-val { font-size: 10px; color: #888; text-align: center; min-height: 14px; }
+    .goal-line { position: absolute; left: 0; right: 0; border-top: 1.5px dashed #E24B4A; pointer-events: none; }
+
+    .legend { display: flex; gap: 16px; margin-top: 10px; justify-content: center; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #888; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+    .legend-line { width: 16px; height: 0; border-top: 1.5px dashed #E24B4A; flex-shrink: 0; }
+
+    .streak-card { background: #f5f5f5; border-radius: 14px; padding: 20px; text-align: center; }
+    .streak-num { font-size: 40px; font-weight: 700; color: #378ADD; }
+    .streak-lbl { font-size: 13px; color: #888; margin-top: 4px; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('tracker')">Today</button>
+    <button class="tab" onclick="switchTab('history')">History</button>
+  </div>
+
+  <div class="page active" id="page-tracker">
+    <div class="header">
+      <h1>Daily Water Tracker</h1>
+      <p id="date-label"></p>
+    </div>
+
+    <div class="figure-wrap">
+      <canvas id="figure-canvas" width="110" height="260" style="display:block;"></canvas>
+    </div>
+
+    <div class="goal-msg" id="goal-msg">Goal reached! Great job staying hydrated!</div>
+
+    <div class="stats">
+      <div class="stat"><div class="stat-val" id="stat-consumed">0</div><div class="stat-lbl">oz consumed</div></div>
+      <div class="stat"><div class="stat-val" id="stat-remaining">100</div><div class="stat-lbl">oz remaining</div></div>
+      <div class="stat"><div class="stat-val" id="stat-bottles">0</div><div class="stat-lbl">bottles (18oz)</div></div>
+    </div>
+
+    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
+    <div class="progress-label"><span id="prog-left">0 oz</span><span id="prog-goal">Goal: 100 oz</span></div>
+
+    <div class="goal-row">
+      <label>Daily goal</label>
+      <input type="number" id="goal-input" value="100" min="1" placeholder="oz" inputmode="numeric" />
+      <span>oz</span>
+    </div>
+
+    <div class="quick-add">
+      <p>Quick add</p>
+      <div class="quick-btns">
+        <button class="quick-btn" onclick="addWater(8)">8 oz</button>
+        <button class="quick-btn" onclick="addWater(18)">18 oz</button>
+        <button class="quick-btn" onclick="addWater(32)">32 oz</button>
+        <button class="quick-btn" onclick="addWater(64)">64 oz</button>
+      </div>
+    </div>
+
+    <div class="custom-row">
+      <input type="number" id="custom-oz" placeholder="Custom amount (oz)" min="1" inputmode="numeric" />
+      <button onclick="addCustom()">+ Add</button>
+    </div>
+
+    <div>
+      <div class="log-header">
+        <p>Today's log</p>
+        <button class="clear-btn" onclick="clearAll()">Clear all</button>
+      </div>
+      <div class="log-list" id="log-list">
+        <p class="empty-log">No entries yet — start drinking!</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="page" id="page-history">
+    <div class="header"><h1>Your history</h1><p>Last 7 days</p></div>
+    <div class="stats">
+      <div class="stat"><div class="stat-val" id="h-avg">—</div><div class="stat-lbl">avg oz/day</div></div>
+      <div class="stat"><div class="stat-val" id="h-best">—</div><div class="stat-lbl">best day</div></div>
+      <div class="stat"><div class="stat-val" id="h-hit">—</div><div class="stat-lbl">goals hit</div></div>
+    </div>
+    <div class="chart-wrap">
+      <p class="chart-title">Daily intake vs goal (oz)</p>
+      <div class="chart-area" id="chart-area"></div>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" style="background:#378ADD"></div>Goal hit</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#B5D4F4"></div>Below goal</div>
+        <div class="legend-item"><div class="legend-line"></div>Goal</div>
+      </div>
+    </div>
+    <div class="streak-card">
+      <div class="streak-num" id="streak-num">0</div>
+      <div class="streak-lbl">day streak hitting your goal</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'water_tracker_data';
+let goal = 100;
+let todayLog = [];
+let animPct = 0;
+let animFrame = null;
+
+const S = 0.799;
+const TX = -213.772, TY = -211;
+const CW = 110, CH = 260;
+const BODY_CENTER_X = 50.15;
+const LABEL_Y = 150;
+
+function todayKey() { return new Date().toISOString().slice(0,10); }
+function loadData() {
+  try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : {goal:100,days:{}}; }
+  catch(e) { return {goal:100,days:{}}; }
+}
+function saveData() {
+  const data = loadData();
+  data.goal = goal;
+  data.days[todayKey()] = todayLog.map(e => e.oz);
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
+}
+function init() {
+  const data = loadData();
+  goal = data.goal || 100;
+  document.getElementById('goal-input').value = goal;
+  todayLog = (data.days[todayKey()] || []).map(oz => ({oz, time:'—'}));
+  render();
+}
+function getTime() { return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
+function total() { return todayLog.reduce((s,e) => s+e.oz, 0); }
+
+function buildFigurePath(ctx) {
+  ctx.save();
+  ctx.scale(S, S);
+  ctx.translate(TX, TY);
+  ctx.beginPath();
+  ctx.ellipse(276.54, 243.586, 32.586, 32.585, Math.atan2(-0.9732, 0.2298), 0, Math.PI*2);
+  ctx.moveTo(302.163, 284.141);
+  ctx.lineTo(250.546, 284.141);
+  ctx.bezierCurveTo(230.236,284.141,213.772,300.605,213.772,320.915);
+  ctx.lineTo(213.772,373.667);
+  ctx.bezierCurveTo(213.772,387.213,221.099,399.042,232.003,405.421);
+  ctx.bezierCurveTo(233.95,406.56,236.406,405.18,236.406,402.924);
+  ctx.lineTo(236.406,324.178);
+  ctx.bezierCurveTo(236.406,322.904,237.439,321.87,238.714,321.87);
+  ctx.bezierCurveTo(239.988,321.87,241.022,322.904,241.022,324.178);
+  ctx.lineTo(241.022,511.52);
+  ctx.bezierCurveTo(241.022,520.623,248.036,528.56,257.135,528.834);
+  ctx.bezierCurveTo(266.549,529.117,274.271,521.569,274.271,512.217);
+  ctx.lineTo(274.271,417.16);
+  ctx.bezierCurveTo(274.271,415.886,275.304,414.852,276.579,414.852);
+  ctx.bezierCurveTo(277.853,414.852,278.887,415.886,278.887,417.16);
+  ctx.lineTo(278.887,511.519);
+  ctx.bezierCurveTo(278.887,520.622,285.901,528.56,295,528.833);
+  ctx.bezierCurveTo(304.415,529.115,312.136,521.568,312.136,512.216);
+  ctx.lineTo(312.136,324.176);
+  ctx.bezierCurveTo(312.136,322.902,313.169,321.868,314.444,321.868);
+  ctx.bezierCurveTo(315.719,321.868,316.752,322.902,316.752,324.176);
+  ctx.lineTo(316.752,402.65);
+  ctx.bezierCurveTo(316.752,404.921,319.242,406.307,321.184,405.13);
+  ctx.bezierCurveTo(331.824,398.688,338.939,387.012,338.939,373.665);
+  ctx.lineTo(338.939,320.913);
+  ctx.bezierCurveTo(338.938,300.605,322.473,284.141,302.163,284.141);
+  ctx.closePath();
+  ctx.restore();
+}
+
+function drawFigure(pct) {
+  const canvas = document.getElementById('figure-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, CW, CH);
+  const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  const strokeColor = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.35)';
+
+  buildFigurePath(ctx);
+  ctx.save();
+  ctx.clip();
+  const fillH = CH * pct / 100;
+  ctx.fillStyle = '#378ADD';
+  ctx.fillRect(0, CH - fillH, CW, fillH);
+  ctx.restore();
+
+  buildFigurePath(ctx);
+  ctx.strokeStyle = strokeColor;
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+
+  const label = Math.round(pct) + '%';
+  ctx.font = '500 12px -apple-system, BlinkMacSystemFont, sans-serif';
+  const textW = ctx.measureText(label).width;
+  const labelX = BODY_CENTER_X - textW / 2;
+  ctx.fillStyle = pct > 55 ? '#fff' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.45)');
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(label, labelX, LABEL_Y);
+}
+
+function animateTo(targetPct) {
+  if (animFrame) cancelAnimationFrame(animFrame);
+  const start = animPct, end = targetPct, duration = 500, startTime = performance.now();
+  function step(now) {
+    const t = Math.min(1, (now - startTime) / duration);
+    animPct = start + (end - start) * t;
+    drawFigure(animPct);
+    if (t < 1) animFrame = requestAnimationFrame(step);
+    else { animPct = end; drawFigure(end); }
+  }
+  animFrame = requestAnimationFrame(step);
+}
+
+function render() {
+  const t = total();
+  const pct = Math.min(100, Math.round(t / goal * 100));
+  document.getElementById('stat-consumed').textContent = t;
+  document.getElementById('stat-remaining').textContent = Math.max(0, goal - t);
+  document.getElementById('stat-bottles').textContent = Math.floor(t / 18);
+  document.getElementById('prog-fill').style.width = pct + '%';
+  document.getElementById('prog-left').textContent = t + ' oz';
+  document.getElementById('prog-goal').textContent = 'Goal: ' + goal + ' oz';
+  document.getElementById('goal-msg').classList.toggle('show', pct >= 100);
+  animateTo(pct);
+
+  const list = document.getElementById('log-list');
+  if (todayLog.length === 0) {
+    list.innerHTML = '<p class="empty-log">No entries yet — start drinking!</p>';
+  } else {
+    list.innerHTML = [...todayLog].reverse().map((e,i) => `
+      <div class="log-item">
+        <div class="log-item-left"><div class="log-drop"></div><span class="log-item-oz">${e.oz} oz</span></div>
+        <span class="log-item-time">${e.time}</span>
+        <button class="log-remove" onclick="removeEntry(${todayLog.length-1-i})">×</button>
+      </div>
+    `).join('');
+  }
+  saveData();
+  renderHistory();
+}
+
+function renderHistory() {
+  const data = loadData();
+  const days = data.days || {};
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const labels = [], values = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    labels.push(i === 0 ? 'Today' : dayNames[d.getDay()]);
+    values.push((days[d.toISOString().slice(0,10)] || []).reduce((s,v) => s+v, 0));
+  }
+  const maxVal = Math.max(goal * 1.2, ...values, 10);
+  const chartArea = document.getElementById('chart-area');
+  chartArea.innerHTML = '';
+  const gl = document.createElement('div');
+  gl.className = 'goal-line';
+  gl.style.bottom = Math.min(100, (goal / maxVal) * 100) + '%';
+  chartArea.appendChild(gl);
+  labels.forEach((lbl, i) => {
+    const oz = values[i];
+    const col = document.createElement('div'); col.className = 'bar-col';
+    const ve = document.createElement('div'); ve.className = 'bar-val'; ve.textContent = oz > 0 ? oz : '';
+    const outer = document.createElement('div'); outer.className = 'bar-outer';
+    const inner = document.createElement('div');
+    inner.className = 'bar-inner' + (oz >= goal && oz > 0 ? ' hit' : '');
+    inner.style.height = Math.round((oz / maxVal) * 100) + '%';
+    const le = document.createElement('div'); le.className = 'bar-label'; le.textContent = lbl;
+    outer.appendChild(inner); col.appendChild(ve); col.appendChild(outer); col.appendChild(le);
+    chartArea.appendChild(col);
+  });
+  const dwd = values.filter(v => v > 0);
+  document.getElementById('h-avg').textContent = dwd.length ? Math.round(dwd.reduce((s,v)=>s+v,0)/dwd.length) : '—';
+  document.getElementById('h-best').textContent = Math.max(...values) || '—';
+  document.getElementById('h-hit').textContent = values.filter(v => v >= goal).length + '/7';
+  let streak = 0;
+  for (let i = 6; i >= 0; i--) { if (values[i] >= goal) streak++; else break; }
+  document.getElementById('streak-num').textContent = streak;
+}
+
+function addWater(oz) { todayLog.push({oz, time: getTime()}); render(); }
+function addCustom() {
+  const input = document.getElementById('custom-oz');
+  const val = parseFloat(input.value);
+  if (!val || val <= 0) return;
+  addWater(val); input.value = '';
+}
+function removeEntry(idx) { todayLog.splice(idx, 1); render(); }
+function clearAll() { todayLog = []; render(); }
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='tracker')||(i===1&&tab==='history')));
+  document.getElementById('page-tracker').classList.toggle('active', tab === 'tracker');
+  document.getElementById('page-history').classList.toggle('active', tab === 'history');
+  if (tab === 'history') renderHistory();
+}
+
+document.getElementById('goal-input').addEventListener('input', e => {
+  const val = parseFloat(e.target.value);
+  if (val && val > 0) { goal = val; render(); }
+});
+document.getElementById('custom-oz').addEventListener('keydown', e => { if (e.key === 'Enter') addCustom(); });
+document.getElementById('date-label').textContent = new Date().toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'});
+
+init();
+</script>
+</body>
+</html>
