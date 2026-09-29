@@ -1,529 +1,620 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="apple-mobile-web-app-title" content="Water Tracker" />
-  <title>Water Tracker</title>
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: #f5f5f5;
-      color: #111;
-      min-height: 100vh;
-    }
-    @media (prefers-color-scheme: dark) {
-      body { background: #1a1a1a; color: #f0f0f0; }
-      .tab { color: #888; }
-      .tab.active { color: #378ADD; }
-      .stat { background: #2a2a2a; }
-      .stat-val { color: #f0f0f0; }
-      .stat-lbl { color: #888; }
-      .progress-bar { background: #2a2a2a; }
-      .progress-label { color: #888; }
-      .goal-row label { color: #888; }
-      .goal-row span { color: #888; }
-      .goal-row input[type="number"] { background: #2a2a2a; border-color: #444; color: #f0f0f0; }
-      .quick-add p { color: #888; }
-      .quick-btn { background: #2a2a2a; border-color: #444; color: #f0f0f0; }
-      .quick-btn:hover { background: #333; }
-      .custom-row input { background: #2a2a2a; border-color: #444; color: #f0f0f0; }
-      .log-header p { color: #888; }
-      .clear-btn { color: #888; }
-      .log-item { background: #2a2a2a; }
-      .log-item-oz { color: #f0f0f0; }
-      .log-item-time { color: #888; }
-      .log-remove { color: #888; }
-      .empty-log { color: #888; }
-      .chart-wrap { background: #2a2a2a; }
-      .chart-title { color: #888; }
-      .bar-label { color: #888; }
-      .bar-val { color: #888; }
-      .streak-card { background: #2a2a2a; }
-      .streak-lbl { color: #888; }
-      .legend-item { color: #888; }
-      .tabs { border-color: #333; }
-      .header h1 { color: #f0f0f0; }
-      .header p { color: #888; }
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Water">
+<meta name="theme-color" content="#EEF4F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C1A22" media="(prefers-color-scheme: dark)">
+<title>Water</title>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EEF4F2; --well:#E0EBE8; --glass:#FAFDFC; --ink:#10283A; --muted:#587280; --line:#CADAD6;
+  --water:#2398CF; --water-deep:#1668A8; --water-light:#8FD8F2; --sun:#A8660F; --sun-line:#E9A63A;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --ui:"Figtree", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0C1A22; --well:#15262F; --glass:#12232C; --ink:#E4EFEC; --muted:#8CA4AE; --line:#23373F;
+    --water:#36A9DD; --water-deep:#1B6FAE; --water-light:#5FC0E6; --sun:#F2B84B; --sun-line:#F2B84B;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0C1A22; --well:#15262F; --glass:#12232C; --ink:#E4EFEC; --muted:#8CA4AE; --line:#23373F;
+  --water:#36A9DD; --water-deep:#1B6FAE; --water-light:#5FC0E6; --sun:#F2B84B; --sun-line:#F2B84B;
+  color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+*,*::before,*::after{box-sizing:inherit;margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:var(--ui);font-size:16px;line-height:1.45;min-height:100%;-webkit-tap-highlight-color:transparent}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:0}
+:focus-visible{outline:2.5px solid var(--water);outline-offset:3px;border-radius:10px}
+.wrap{max-width:460px;margin:0 auto;padding:0 20px calc(96px + env(safe-area-inset-bottom,0px))}
 
-    .app {
-      max-width: 480px;
-      margin: 0 auto;
-      background: #fff;
-      min-height: 100vh;
-    }
-    @media (prefers-color-scheme: dark) {
-      .app { background: #1a1a1a; }
-    }
+/* top bar */
+.top{display:flex;align-items:center;justify-content:space-between;padding:18px 0 4px}
+.top p{font-size:15px;color:var(--muted);font-weight:500}
+.icon-btn{width:40px;height:40px;display:grid;place-items:center;border-radius:12px;color:var(--muted)}
+.icon-btn:hover{background:var(--well);color:var(--ink)}
+.icon-btn svg{width:22px;height:22px}
 
-    .tabs {
-      display: flex;
-      border-bottom: 1px solid #e5e5e5;
-      position: sticky;
-      top: 0;
-      background: #fff;
-      z-index: 10;
-    }
-    @media (prefers-color-scheme: dark) {
-      .tabs { background: #1a1a1a; border-color: #333; }
-    }
-    .tab {
-      flex: 1;
-      padding: 14px;
-      text-align: center;
-      font-size: 15px;
-      font-weight: 500;
-      color: #555;
-      cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: color 0.15s, border-color 0.15s;
-      background: none;
-      border-top: none; border-left: none; border-right: none;
-    }
-    .tab.active { color: #378ADD; border-bottom-color: #378ADD; }
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,46fr) minmax(0,54fr);align-items:center;gap:12px;padding:6px 0 18px}
+.figure{width:100%;max-width:200px;height:auto;display:block;justify-self:center;overflow:visible}
+.figure .outline{fill:var(--ink);stroke:var(--ink);stroke-width:7;stroke-linejoin:round}
+.figure .glass{fill:var(--glass)}
+.figure .pct{font-family:var(--display);font-weight:700;font-size:30px;letter-spacing:-.02em;text-anchor:middle;dominant-baseline:central}
+.figure .pct.dry{fill:var(--muted)}
+.figure .pct.wet{fill:#fff}
+.readout .amount{font-family:var(--display);font-weight:700;font-size:clamp(60px,19vw,84px);line-height:.9;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.readout .amount small{font-size:.32em;letter-spacing:0;font-weight:500;margin-left:4px;color:var(--muted)}
+.readout .of{color:var(--muted);font-size:16px;margin-top:6px}
+.readout .status{font-weight:600;font-size:17px;margin-top:18px}
+.readout .status.met{color:var(--sun)}
+.readout .hint{color:var(--muted);font-size:14.5px;margin-top:2px}
 
-    .page { display: none; padding: 0 16px 40px; }
-    .page.active { display: block; }
+/* add */
+h2{font-family:var(--display);font-weight:500;font-size:20px;letter-spacing:-.01em}
+.section{padding:22px 0 0}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px}
+.chips{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.chip{display:flex;flex-direction:column;align-items:center;gap:4px;padding:14px 4px 12px;border-radius:18px;background:var(--well);transition:transform .12s ease, background .15s}
+@media (hover:hover){.chip:hover{background:color-mix(in srgb,var(--well) 70%,var(--water-light))}}
+.chip:active{transform:scale(.95)}
+.chip svg{width:30px;height:30px;color:var(--water-deep);margin-bottom:2px}
+.chip b{font-weight:600;font-size:16px;font-variant-numeric:tabular-nums}
+.chip span{font-size:12.5px;color:var(--muted)}
+.custom{display:flex;gap:8px;margin-top:10px}
+.custom input{flex:1;min-width:0;border:1.5px solid var(--line);background:transparent;border-radius:14px;padding:12px 14px;font-size:16px;-webkit-appearance:none;appearance:none}
+.custom input:focus{outline:none;border-color:var(--water)}
+.custom input::placeholder{color:var(--muted)}
+.btn{border-radius:14px;padding:12px 20px;font-weight:600;background:var(--ink);color:var(--paper)}
+.btn:active{transform:scale(.97)}
+.error{color:#C2412D;font-size:14px;margin-top:6px;min-height:0}
+:root[data-theme="dark"] .error{color:#F08A74}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .error{color:#F08A74}}
 
-    .header { text-align: center; padding: 20px 0 8px; margin-bottom: 16px; }
-    .header h1 { font-size: 22px; font-weight: 600; color: #111; }
-    .header p { font-size: 13px; color: #888; margin-top: 4px; }
-    @media (prefers-color-scheme: dark) {
-      .header h1 { color: #f0f0f0; }
-    }
+/* log */
+.text-btn{font-size:14px;color:var(--muted);padding:6px 8px;border-radius:8px}
+.text-btn:hover{color:var(--ink);background:var(--well)}
+.text-btn.confirm{color:#C2412D}
+.log{list-style:none}
+.log li{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:12px;padding:11px 0;border-top:1px solid var(--line)}
+.log li:last-child{border-bottom:1px solid var(--line)}
+.log .dot{width:9px;height:9px;border-radius:50%;background:var(--water)}
+.log .oz{font-weight:600;font-variant-numeric:tabular-nums}
+.log .oz span{font-weight:400;color:var(--muted);margin-left:6px}
+.log time{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
+.log .rm{width:32px;height:32px;display:grid;place-items:center;border-radius:10px;color:var(--muted)}
+.log .rm:hover{background:var(--well);color:var(--ink)}
+.log .rm svg{width:16px;height:16px}
+.empty{color:var(--muted);padding:14px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 
-    .figure-wrap { display: flex; justify-content: center; margin: 8px 0 20px; }
+/* history */
+.hist-head{padding:22px 0 4px}
+.hist-head h1{font-family:var(--display);font-weight:700;font-size:34px;letter-spacing:-.03em;line-height:1.05}
+.hist-head p{color:var(--muted);margin-top:8px;max-width:34ch}
+.chart{position:relative;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px;margin-top:26px;height:230px;align-items:end}
+.col{display:flex;flex-direction:column;align-items:center;gap:6px;height:100%}
+.col .val{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums;min-height:18px}
+.tube{position:relative;flex:1;width:100%;max-width:34px;border-radius:999px;background:var(--well);overflow:hidden}
+.tube i{position:absolute;left:0;right:0;bottom:0;background:linear-gradient(var(--water-light),var(--water));border-radius:999px 999px 0 0;transition:height .6s cubic-bezier(.2,.8,.2,1)}
+.tube.hit i{background:linear-gradient(var(--water),var(--water-deep))}
+.col .day{font-size:13px;color:var(--muted)}
+.col.today .day{color:var(--ink);font-weight:600}
+.goal-line{position:absolute;left:-4px;right:-4px;border-top:2px dashed var(--sun-line);pointer-events:none}
+.goal-line span{position:absolute;right:0;top:-22px;font-size:12px;color:var(--sun);font-weight:600;background:var(--paper);padding:0 4px}
+.chart-plot{position:absolute;left:0;right:0;top:24px;bottom:26px;pointer-events:none}
+.figures{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:30px;border-top:1px solid var(--line)}
+.figures div{padding:16px 0 0}
+.figures div+div{padding-left:14px;border-left:1px solid var(--line)}
+.figures b{display:block;font-family:var(--display);font-weight:700;font-size:30px;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1.1}
+.figures b small{font-size:14px;font-weight:500;color:var(--muted);letter-spacing:0;margin-left:3px}
+.figures span{font-size:13.5px;color:var(--muted)}
 
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    .stat { background: #f5f5f5; border-radius: 10px; padding: 12px 8px; text-align: center; }
-    .stat-val { font-size: 22px; font-weight: 600; color: #111; }
-    .stat-lbl { font-size: 11px; color: #888; margin-top: 3px; }
+/* tab bar */
+.tabbar{position:fixed;left:0;right:0;bottom:0;padding-bottom:env(safe-area-inset-bottom,0px);background:color-mix(in srgb,var(--paper) 88%,transparent);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--line);z-index:20}
+.tabbar div{max-width:460px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:9px 0 8px;font-size:12.5px;font-weight:500;color:var(--muted)}
+.tab svg{width:24px;height:24px}
+.tab[aria-current="page"]{color:var(--water-deep)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tab[aria-current="page"]{color:var(--water)}}
+:root[data-theme="dark"] .tab[aria-current="page"]{color:var(--water)}
 
-    .progress-bar { background: #e8e8e8; border-radius: 999px; height: 12px; overflow: hidden; margin-bottom: 6px; }
-    .progress-fill { height: 100%; border-radius: 999px; background: #378ADD; transition: width 0.4s ease; }
-    .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: #888; margin-bottom: 20px; }
+/* toast */
+.toast{position:fixed;left:50%;bottom:calc(78px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);opacity:0;pointer-events:none;background:var(--ink);color:var(--paper);border-radius:14px;padding:8px 8px 8px 16px;display:flex;align-items:center;gap:12px;font-size:15px;transition:opacity .2s, transform .2s;z-index:30;white-space:nowrap}
+.toast.show{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.toast button{color:var(--water-light);}
+:root[data-theme="dark"] .toast button{color:#1668A8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .toast button{color:#1668A8}}
+.toast button{font-weight:600;padding:6px 10px;border-radius:10px}
 
-    .goal-row { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-    .goal-row label { font-size: 14px; color: #666; white-space: nowrap; }
-    .goal-row input[type="number"] {
-      flex: 1;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      background: #fff;
-      color: #111;
-      font-size: 15px;
-      padding: 10px 12px;
-      outline: none;
-      -webkit-appearance: none;
-    }
-    .goal-row input[type="number"]:focus { border-color: #378ADD; }
-    .goal-row span { font-size: 14px; color: #666; }
+/* settings dialog */
+dialog{margin:auto auto 0;width:100%;max-width:460px;border:0;border-radius:24px 24px 0 0;background:var(--paper);color:var(--ink);padding:22px 20px calc(22px + env(safe-area-inset-bottom,0px))}
+@media (min-width:600px){dialog{margin:auto;border-radius:24px}}
+dialog::backdrop{background:rgba(6,18,26,.45)}
+dialog h2{margin-bottom:18px}
+.field{margin-bottom:18px}
+.field label{display:block;font-size:14px;color:var(--muted);margin-bottom:8px}
+.stepper{display:flex;align-items:center;gap:8px}
+.stepper button{width:48px;height:48px;border-radius:14px;background:var(--well);font-size:22px;font-weight:500}
+.stepper input{flex:1;min-width:0;text-align:center;font-family:var(--display);font-weight:700;font-size:26px;border:1.5px solid var(--line);border-radius:14px;background:transparent;padding:6px;-webkit-appearance:none;appearance:none;-moz-appearance:textfield}
+.stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none}
+.stepper span{color:var(--muted);width:24px}
+.dialog-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+.btn.ghost{background:transparent;color:var(--ink)}
 
-    .quick-add { margin-bottom: 16px; }
-    .quick-add p { font-size: 13px; color: #888; margin-bottom: 8px; }
-    .quick-btns { display: flex; gap: 8px; flex-wrap: wrap; }
-    .quick-btn {
-      flex: 1;
-      min-width: 60px;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      background: #fff;
-      color: #111;
-      font-size: 14px;
-      font-weight: 500;
-      padding: 12px 4px;
-      cursor: pointer;
-      transition: background 0.15s, transform 0.1s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .quick-btn:hover { background: #f5f5f5; }
-    .quick-btn:active { transform: scale(0.96); background: #eee; }
-
-    .custom-row { display: flex; gap: 8px; margin-bottom: 20px; }
-    .custom-row input {
-      flex: 1;
-      border: 1px solid #ddd;
-      border-radius: 10px;
-      background: #fff;
-      color: #111;
-      font-size: 15px;
-      padding: 12px;
-      outline: none;
-      -webkit-appearance: none;
-    }
-    .custom-row input:focus { border-color: #378ADD; }
-    .custom-row button {
-      border: none;
-      border-radius: 10px;
-      background: #378ADD;
-      color: #fff;
-      font-size: 15px;
-      font-weight: 500;
-      padding: 12px 18px;
-      cursor: pointer;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .custom-row button:active { opacity: 0.85; }
-
-    .log-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-    .log-header p { font-size: 14px; color: #888; }
-    .clear-btn { font-size: 13px; color: #888; background: none; border: none; cursor: pointer; padding: 4px 8px; border-radius: 6px; }
-    .clear-btn:active { background: #eee; }
-
-    .log-list { display: flex; flex-direction: column; gap: 6px; }
-    .log-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #f5f5f5;
-      border-radius: 10px;
-      padding: 10px 14px;
-    }
-    .log-item-left { display: flex; align-items: center; gap: 10px; }
-    .log-drop {
-      width: 10px; height: 10px;
-      background: #378ADD;
-      border-radius: 50% 50% 50% 0;
-      transform: rotate(-45deg);
-      flex-shrink: 0;
-    }
-    .log-item-oz { font-size: 15px; font-weight: 500; color: #111; }
-    .log-item-time { font-size: 13px; color: #888; }
-    .log-remove { font-size: 20px; background: none; border: none; cursor: pointer; color: #aaa; line-height: 1; padding: 0 2px; }
-
-    .empty-log { font-size: 14px; color: #aaa; text-align: center; padding: 20px 0; }
-
-    .goal-msg {
-      text-align: center;
-      font-size: 14px;
-      font-weight: 500;
-      color: #1D9E75;
-      padding: 10px;
-      margin-bottom: 12px;
-      border-radius: 10px;
-      background: #E1F5EE;
-      display: none;
-    }
-    .goal-msg.show { display: block; }
-
-    /* History */
-    .chart-wrap { background: #f5f5f5; border-radius: 14px; padding: 16px; margin-bottom: 16px; }
-    .chart-title { font-size: 13px; color: #888; margin-bottom: 12px; }
-    .chart-area { position: relative; height: 180px; display: flex; align-items: flex-end; gap: 6px; }
-    .bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
-    .bar-outer { width: 100%; flex: 1; display: flex; align-items: flex-end; }
-    .bar-inner { width: 100%; border-radius: 4px 4px 0 0; background: #B5D4F4; transition: height 0.4s ease; min-height: 2px; }
-    .bar-inner.hit { background: #378ADD; }
-    .bar-label { font-size: 10px; color: #888; text-align: center; }
-    .bar-val { font-size: 10px; color: #888; text-align: center; min-height: 14px; }
-    .goal-line { position: absolute; left: 0; right: 0; border-top: 1.5px dashed #E24B4A; pointer-events: none; }
-
-    .legend { display: flex; gap: 16px; margin-top: 10px; justify-content: center; flex-wrap: wrap; }
-    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 11px; color: #888; }
-    .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
-    .legend-line { width: 16px; height: 0; border-top: 1.5px dashed #E24B4A; flex-shrink: 0; }
-
-    .streak-card { background: #f5f5f5; border-radius: 14px; padding: 20px; text-align: center; }
-    .streak-num { font-size: 40px; font-weight: 700; color: #378ADD; }
-    .streak-lbl { font-size: 13px; color: #888; margin-top: 4px; }
-  </style>
+[hidden]{display:none!important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
 </head>
 <body>
-<div class="app">
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('tracker')">Today</button>
-    <button class="tab" onclick="switchTab('history')">History</button>
-  </div>
+<div class="wrap">
 
-  <div class="page active" id="page-tracker">
-    <div class="header">
-      <h1>Daily Water Tracker</h1>
-      <p id="date-label"></p>
-    </div>
+  <main id="view-today">
+    <header class="top">
+      <p id="date"></p>
+      <button class="icon-btn" id="open-settings" aria-label="Goal and bottle size">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>
+      </button>
+    </header>
 
-    <div class="figure-wrap">
-      <canvas id="figure-canvas" width="110" height="260" style="display:block;"></canvas>
-    </div>
+    <section class="hero">
+      <svg class="figure" id="figure" viewBox="6 10 188 380" role="img" aria-label="0% of daily goal">
+        <defs>
+          <g id="fig-shapes">
+            <circle cx="100" cy="58" r="38"/>
+            <rect x="54" y="108" width="92" height="150" rx="38"/>
+            <rect x="18" y="112" width="30" height="128" rx="15"/>
+            <rect x="152" y="112" width="30" height="128" rx="15"/>
+            <rect x="56" y="214" width="40" height="166" rx="20"/>
+            <rect x="104" y="214" width="40" height="166" rx="20"/>
+          </g>
+          <clipPath id="fig-clip">
+            <circle cx="100" cy="58" r="38"/>
+            <rect x="54" y="108" width="92" height="150" rx="38"/>
+            <rect x="18" y="112" width="30" height="128" rx="15"/>
+            <rect x="152" y="112" width="30" height="128" rx="15"/>
+            <rect x="56" y="214" width="40" height="166" rx="20"/>
+            <rect x="104" y="214" width="40" height="166" rx="20"/>
+          </clipPath>
+          <clipPath id="water-clip"><path id="water-clip-path" d="M0 400H200Z"/></clipPath>
+          <linearGradient id="water-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" style="stop-color:var(--water)"/>
+            <stop offset="1" style="stop-color:var(--water-deep)"/>
+          </linearGradient>
+        </defs>
+        <use href="#fig-shapes" class="outline"/>
+        <use href="#fig-shapes" class="glass"/>
+        <g clip-path="url(#fig-clip)">
+          <path id="wave-back" style="fill:var(--water-light)" d="M0 400H200Z"/>
+          <path id="wave-front" fill="url(#water-grad)" d="M0 400H200Z"/>
+          <g id="bubbles" fill="#fff" fill-opacity=".55"></g>
+          <g clip-path="url(#water-clip)">
+            <rect x="64" y="122" width="7" height="104" rx="3.5" fill="#fff" opacity=".28"/>
+            <rect x="26" y="124" width="5" height="70" rx="2.5" fill="#fff" opacity=".22"/>
+          </g>
+        </g>
+        <text class="pct dry" x="100" y="186" id="pct-dry">0%</text>
+        <text class="pct wet" x="100" y="186" id="pct-wet" clip-path="url(#water-clip)">0%</text>
+      </svg>
 
-    <div class="goal-msg" id="goal-msg">Goal reached! Great job staying hydrated!</div>
-
-    <div class="stats">
-      <div class="stat"><div class="stat-val" id="stat-consumed">0</div><div class="stat-lbl">oz consumed</div></div>
-      <div class="stat"><div class="stat-val" id="stat-remaining">100</div><div class="stat-lbl">oz remaining</div></div>
-      <div class="stat"><div class="stat-val" id="stat-bottles">0</div><div class="stat-lbl">bottles (18oz)</div></div>
-    </div>
-
-    <div class="progress-bar"><div class="progress-fill" id="prog-fill" style="width:0%"></div></div>
-    <div class="progress-label"><span id="prog-left">0 oz</span><span id="prog-goal">Goal: 100 oz</span></div>
-
-    <div class="goal-row">
-      <label>Daily goal</label>
-      <input type="number" id="goal-input" value="100" min="1" placeholder="oz" inputmode="numeric" />
-      <span>oz</span>
-    </div>
-
-    <div class="quick-add">
-      <p>Quick add</p>
-      <div class="quick-btns">
-        <button class="quick-btn" onclick="addWater(8)">8 oz</button>
-        <button class="quick-btn" onclick="addWater(18)">18 oz</button>
-        <button class="quick-btn" onclick="addWater(32)">32 oz</button>
-        <button class="quick-btn" onclick="addWater(64)">64 oz</button>
+      <div class="readout" aria-live="polite">
+        <div class="amount"><span id="amount">0</span><small>oz</small></div>
+        <p class="of" id="of">of 100 oz</p>
+        <p class="status" id="status">100 oz to go</p>
+        <p class="hint" id="hint"></p>
       </div>
-    </div>
+    </section>
 
-    <div class="custom-row">
-      <input type="number" id="custom-oz" placeholder="Custom amount (oz)" min="1" inputmode="numeric" />
-      <button onclick="addCustom()">+ Add</button>
-    </div>
+    <section class="section" aria-labelledby="add-h">
+      <div class="section-head"><h2 id="add-h">Add a drink</h2></div>
+      <div class="chips" id="chips"></div>
+      <div class="custom">
+        <label class="sr" for="custom">Other amount in ounces</label>
+        <input id="custom" type="number" inputmode="decimal" min="1" max="200" step="any" placeholder="Other amount, oz">
+        <button class="btn" id="custom-add">Add</button>
+      </div>
+      <p class="error" id="custom-error" role="alert"></p>
+    </section>
 
-    <div>
-      <div class="log-header">
-        <p>Today's log</p>
-        <button class="clear-btn" onclick="clearAll()">Clear all</button>
+    <section class="section" aria-labelledby="log-h">
+      <div class="section-head">
+        <h2 id="log-h">Today’s drinks</h2>
+        <button class="text-btn" id="clear" hidden>Clear all</button>
       </div>
-      <div class="log-list" id="log-list">
-        <p class="empty-log">No entries yet — start drinking!</p>
-      </div>
-    </div>
-  </div>
+      <ol class="log" id="log"></ol>
+      <p class="empty" id="empty">Nothing logged yet. Tap a drink above to start.</p>
+    </section>
+  </main>
 
-  <div class="page" id="page-history">
-    <div class="header"><h1>Your history</h1><p>Last 7 days</p></div>
-    <div class="stats">
-      <div class="stat"><div class="stat-val" id="h-avg">—</div><div class="stat-lbl">avg oz/day</div></div>
-      <div class="stat"><div class="stat-val" id="h-best">—</div><div class="stat-lbl">best day</div></div>
-      <div class="stat"><div class="stat-val" id="h-hit">—</div><div class="stat-lbl">goals hit</div></div>
+  <main id="view-history" hidden>
+    <header class="hist-head">
+      <h1 id="hist-title">Last 7 days</h1>
+      <p id="hist-summary"></p>
+    </header>
+    <div class="chart" id="chart" role="img"></div>
+    <div class="figures">
+      <div><b id="f-avg">0</b><span>Daily average</span></div>
+      <div><b id="f-best">0</b><span>Best day</span></div>
+      <div><b id="f-streak">0</b><span>Goal streak</span></div>
     </div>
-    <div class="chart-wrap">
-      <p class="chart-title">Daily intake vs goal (oz)</p>
-      <div class="chart-area" id="chart-area"></div>
-      <div class="legend">
-        <div class="legend-item"><div class="legend-dot" style="background:#378ADD"></div>Goal hit</div>
-        <div class="legend-item"><div class="legend-dot" style="background:#B5D4F4"></div>Below goal</div>
-        <div class="legend-item"><div class="legend-line"></div>Goal</div>
-      </div>
-    </div>
-    <div class="streak-card">
-      <div class="streak-num" id="streak-num">0</div>
-      <div class="streak-lbl">day streak hitting your goal</div>
-    </div>
-  </div>
+  </main>
 </div>
 
+<nav class="tabbar" aria-label="Views">
+  <div>
+    <button class="tab" data-view="today" aria-current="page">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M12 3.5c3.2 4 6 7.3 6 10.7a6 6 0 0 1-12 0c0-3.4 2.8-6.7 6-10.7Z"/></svg>
+      Today
+    </button>
+    <button class="tab" data-view="history">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M5 20V12M10 20V6M15 20v-9M20 20V9"/></svg>
+      History
+    </button>
+  </div>
+</nav>
+
+<div class="toast" id="toast" role="status"><span id="toast-text"></span><button id="undo">Undo</button></div>
+
+<dialog id="settings" aria-labelledby="settings-h">
+  <h2 id="settings-h">Goal and bottle</h2>
+  <div class="field">
+    <label for="goal-input">Daily goal</label>
+    <div class="stepper">
+      <button type="button" data-step="goal" data-dir="-1" aria-label="Lower goal by 4 oz">−</button>
+      <input id="goal-input" type="number" inputmode="numeric" min="8" max="400">
+      <button type="button" data-step="goal" data-dir="1" aria-label="Raise goal by 4 oz">+</button>
+      <span>oz</span>
+    </div>
+  </div>
+  <div class="field">
+    <label for="bottle-input">Your bottle holds</label>
+    <div class="stepper">
+      <button type="button" data-step="bottle" data-dir="-1" aria-label="Smaller bottle">−</button>
+      <input id="bottle-input" type="number" inputmode="numeric" min="4" max="128">
+      <button type="button" data-step="bottle" data-dir="1" aria-label="Larger bottle">+</button>
+      <span>oz</span>
+    </div>
+  </div>
+  <div class="dialog-actions">
+    <button class="btn ghost" id="settings-cancel">Cancel</button>
+    <button class="btn" id="settings-save">Save</button>
+  </div>
+</dialog>
+
 <script>
-const STORAGE_KEY = 'water_tracker_data';
-let goal = 100;
-let todayLog = [];
-let animPct = 0;
-let animFrame = null;
+(() => {
+const KEY = 'water_tracker_data';
+const $ = id => document.getElementById(id);
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const S = 0.799;
-const TX = -213.772, TY = -211;
-const CW = 110, CH = 260;
-const BODY_CENTER_X = 50.15;
-const LABEL_Y = 150;
-
-function todayKey() { return new Date().toISOString().slice(0,10); }
-function loadData() {
-  try { const r = localStorage.getItem(STORAGE_KEY); return r ? JSON.parse(r) : {goal:100,days:{}}; }
-  catch(e) { return {goal:100,days:{}}; }
+/* ---------- data ---------- */
+function dayKey(d = new Date()) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
-function saveData() {
-  const data = loadData();
-  data.goal = goal;
-  data.days[todayKey()] = todayLog.map(e => e.oz);
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch(e) {}
-}
-function init() {
-  const data = loadData();
-  goal = data.goal || 100;
-  document.getElementById('goal-input').value = goal;
-  todayLog = (data.days[todayKey()] || []).map(oz => ({oz, time:'—'}));
-  render();
-}
-function getTime() { return new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'}); }
-function total() { return todayLog.reduce((s,e) => s+e.oz, 0); }
-
-function buildFigurePath(ctx) {
-  ctx.save();
-  ctx.scale(S, S);
-  ctx.translate(TX, TY);
-  ctx.beginPath();
-  ctx.ellipse(276.54, 243.586, 32.586, 32.585, Math.atan2(-0.9732, 0.2298), 0, Math.PI*2);
-  ctx.moveTo(302.163, 284.141);
-  ctx.lineTo(250.546, 284.141);
-  ctx.bezierCurveTo(230.236,284.141,213.772,300.605,213.772,320.915);
-  ctx.lineTo(213.772,373.667);
-  ctx.bezierCurveTo(213.772,387.213,221.099,399.042,232.003,405.421);
-  ctx.bezierCurveTo(233.95,406.56,236.406,405.18,236.406,402.924);
-  ctx.lineTo(236.406,324.178);
-  ctx.bezierCurveTo(236.406,322.904,237.439,321.87,238.714,321.87);
-  ctx.bezierCurveTo(239.988,321.87,241.022,322.904,241.022,324.178);
-  ctx.lineTo(241.022,511.52);
-  ctx.bezierCurveTo(241.022,520.623,248.036,528.56,257.135,528.834);
-  ctx.bezierCurveTo(266.549,529.117,274.271,521.569,274.271,512.217);
-  ctx.lineTo(274.271,417.16);
-  ctx.bezierCurveTo(274.271,415.886,275.304,414.852,276.579,414.852);
-  ctx.bezierCurveTo(277.853,414.852,278.887,415.886,278.887,417.16);
-  ctx.lineTo(278.887,511.519);
-  ctx.bezierCurveTo(278.887,520.622,285.901,528.56,295,528.833);
-  ctx.bezierCurveTo(304.415,529.115,312.136,521.568,312.136,512.216);
-  ctx.lineTo(312.136,324.176);
-  ctx.bezierCurveTo(312.136,322.902,313.169,321.868,314.444,321.868);
-  ctx.bezierCurveTo(315.719,321.868,316.752,322.902,316.752,324.176);
-  ctx.lineTo(316.752,402.65);
-  ctx.bezierCurveTo(316.752,404.921,319.242,406.307,321.184,405.13);
-  ctx.bezierCurveTo(331.824,398.688,338.939,387.012,338.939,373.665);
-  ctx.lineTo(338.939,320.913);
-  ctx.bezierCurveTo(338.938,300.605,322.473,284.141,302.163,284.141);
-  ctx.closePath();
-  ctx.restore();
-}
-
-function drawFigure(pct) {
-  const canvas = document.getElementById('figure-canvas');
-  const ctx = canvas.getContext('2d');
-  ctx.clearRect(0, 0, CW, CH);
-  const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const strokeColor = isDark ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.35)';
-
-  buildFigurePath(ctx);
-  ctx.save();
-  ctx.clip();
-  const fillH = CH * pct / 100;
-  ctx.fillStyle = '#378ADD';
-  ctx.fillRect(0, CH - fillH, CW, fillH);
-  ctx.restore();
-
-  buildFigurePath(ctx);
-  ctx.strokeStyle = strokeColor;
-  ctx.lineWidth = 1.8;
-  ctx.stroke();
-
-  const label = Math.round(pct) + '%';
-  ctx.font = '500 12px -apple-system, BlinkMacSystemFont, sans-serif';
-  const textW = ctx.measureText(label).width;
-  const labelX = BODY_CENTER_X - textW / 2;
-  ctx.fillStyle = pct > 55 ? '#fff' : (isDark ? 'rgba(255,255,255,0.6)' : 'rgba(0,0,0,0.45)');
-  ctx.textAlign = 'left';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(label, labelX, LABEL_Y);
-}
-
-function animateTo(targetPct) {
-  if (animFrame) cancelAnimationFrame(animFrame);
-  const start = animPct, end = targetPct, duration = 500, startTime = performance.now();
-  function step(now) {
-    const t = Math.min(1, (now - startTime) / duration);
-    animPct = start + (end - start) * t;
-    drawFigure(animPct);
-    if (t < 1) animFrame = requestAnimationFrame(step);
-    else { animPct = end; drawFigure(end); }
+function load() {
+  let d = null;
+  try { d = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+  if (!d || typeof d !== 'object') d = {};
+  d.goal = +d.goal > 0 ? +d.goal : 100;
+  d.bottle = +d.bottle > 0 ? +d.bottle : 18;
+  d.days = d.days && typeof d.days === 'object' ? d.days : {};
+  d.goals = d.goals && typeof d.goals === 'object' ? d.goals : {};
+  let n = 0;
+  for (const k in d.days) {
+    d.days[k] = (Array.isArray(d.days[k]) ? d.days[k] : [])
+      .map(e => typeof e === 'number' ? { oz: e, t: null } : e)
+      .filter(e => e && +e.oz > 0)
+      .map(e => ({ oz: +e.oz, t: e.t || null, id: e.id || ('e' + (n++) + k) }));
   }
-  animFrame = requestAnimationFrame(step);
+  return d;
+}
+let store = load();
+let today = dayKey();
+function save() { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} }
+const list = k => store.days[k] || [];
+const totalFor = k => list(k).reduce((s, e) => s + e.oz, 0);
+const goalFor = k => store.goals[k] || store.goal;
+const fmt = n => String(Math.round(n * 10) / 10);
+
+const DRINKS = () => [
+  { oz: 8, name: 'Glass', icon: '<path d="M7 5h10l-1.3 14.2a1 1 0 0 1-1 .8H9.3a1 1 0 0 1-1-.8Z"/><path d="M7.6 11h8.8"/>' },
+  { oz: store.bottle, name: 'Bottle', icon: '<path d="M10 3h4v3l1.6 2.2c.3.4.4.8.4 1.2V20a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V9.4c0-.4.1-.8.4-1.2L10 6Z"/><path d="M8 13h8"/>' },
+  { oz: 32, name: 'Large', icon: '<path d="M9.5 2.5h5v2.5l2 2.6c.3.4.5.9.5 1.4V21a.5.5 0 0 1-.5.5h-9A.5.5 0 0 1 7 21V9c0-.5.2-1 .5-1.4l2-2.6Z"/><path d="M7 11.5h10"/>' },
+  { oz: 64, name: 'Jug', icon: '<path d="M6 6h9v14a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1Z"/><path d="M15 9h1.5A2.5 2.5 0 0 1 19 11.5v3a2.5 2.5 0 0 1-2.5 2.5H15"/><path d="M6 11h9"/><path d="M8 3h5"/>' },
+];
+function drinkName(oz) {
+  const m = DRINKS().find(d => d.oz === oz);
+  return m ? m.name : '';
 }
 
-function render() {
-  const t = total();
-  const pct = Math.min(100, Math.round(t / goal * 100));
-  document.getElementById('stat-consumed').textContent = t;
-  document.getElementById('stat-remaining').textContent = Math.max(0, goal - t);
-  document.getElementById('stat-bottles').textContent = Math.floor(t / 18);
-  document.getElementById('prog-fill').style.width = pct + '%';
-  document.getElementById('prog-left').textContent = t + ' oz';
-  document.getElementById('prog-goal').textContent = 'Goal: ' + goal + ' oz';
-  document.getElementById('goal-msg').classList.toggle('show', pct >= 100);
-  animateTo(pct);
+/* ---------- figure engine ---------- */
+const waveFront = $('wave-front'), waveBack = $('wave-back'), waterClip = $('water-clip-path');
+const bubbleLayer = $('bubbles');
+const SVGNS = 'http://www.w3.org/2000/svg';
+let level = 0, target = 0, surge = 0, phase = 0, last = 0, raf = 0, ambient = 0, rawPct = 0;
+let bubbles = [];
 
-  const list = document.getElementById('log-list');
-  if (todayLog.length === 0) {
-    list.innerHTML = '<p class="empty-log">No entries yet — start drinking!</p>';
+const levelY = p => 392 - (p / 100) * 384;
+function wavePath(base, amp, ph) {
+  let d = '';
+  for (let x = 0; x <= 200; x += 5) {
+    const y = base + amp * Math.sin(x * 0.045 + ph) + amp * 0.35 * Math.sin(x * 0.11 - ph * 1.4);
+    d += (x ? 'L' : 'M') + x + ' ' + y.toFixed(2);
+  }
+  return d + 'L200 400L0 400Z';
+}
+function spawnBubble(fromBottom) {
+  if (reduceMotion) return;
+  const inLeg = Math.random() < .5;
+  const x = inLeg ? (Math.random() < .5 ? 64 + Math.random() * 24 : 112 + Math.random() * 24) : 66 + Math.random() * 68;
+  const y = fromBottom ? 360 + Math.random() * 16 : Math.max(levelY(level) + 30, 150 + Math.random() * 220);
+  const r = 1.4 + Math.random() * 2.6;
+  const el = document.createElementNS(SVGNS, 'circle');
+  el.setAttribute('r', r.toFixed(2));
+  bubbleLayer.appendChild(el);
+  bubbles.push({ x, y, r, el, v: 34 + Math.random() * 40 + r * 6, w: Math.random() * 6.28 });
+}
+function draw() {
+  const base = levelY(level);
+  const amp = level <= 0.2 ? 0 : 4 + surge;
+  const front = wavePath(base, amp, phase);
+  waveFront.setAttribute('d', front);
+  waterClip.setAttribute('d', front);
+  waveBack.setAttribute('d', wavePath(base - 3.5, amp * 0.85, -phase * 0.8 + 2.1));
+  const label = (rawPct > 100 ? Math.round(rawPct) : Math.round(level)) + '%';
+  $('pct-dry').textContent = label;
+  $('pct-wet').textContent = label;
+  for (let i = bubbles.length - 1; i >= 0; i--) {
+    const b = bubbles[i];
+    if (b.y < base + 3 || level <= 0.5) { b.el.remove(); bubbles.splice(i, 1); continue; }
+    b.el.setAttribute('cx', (b.x + Math.sin(b.w + b.y * 0.06) * 2.2).toFixed(2));
+    b.el.setAttribute('cy', b.y.toFixed(2));
+  }
+}
+function tick(now) {
+  const dt = Math.min(0.05, (now - last) / 1000 || 0);
+  last = now;
+  level += (target - level) * (1 - Math.exp(-dt * 3));
+  if (Math.abs(target - level) < 0.02) level = target;
+  phase += dt * 1.7;
+  surge *= Math.exp(-dt * 1.6);
+  for (const b of bubbles) b.y -= b.v * dt;
+  ambient += dt;
+  if (ambient > 2.4) { ambient = 0; if (level > 10) spawnBubble(false); }
+  draw();
+  raf = requestAnimationFrame(tick);
+}
+function startLoop() {
+  if (reduceMotion) { level = target; draw(); return; }
+  if (raf || document.hidden || $('view-today').hidden) return;
+  last = performance.now();
+  raf = requestAnimationFrame(tick);
+}
+function stopLoop() { cancelAnimationFrame(raf); raf = 0; }
+function splash(oz) {
+  if (reduceMotion) return;
+  surge = Math.min(11, 5 + oz / 6);
+  const n = Math.min(14, 5 + Math.round(oz / 6));
+  for (let i = 0; i < n; i++) setTimeout(() => spawnBubble(true), i * 70);
+}
+
+/* ---------- today ---------- */
+function renderChips() {
+  $('chips').innerHTML = DRINKS().map(d =>
+    `<button class="chip" data-oz="${d.oz}" aria-label="Add ${fmt(d.oz)} ounce ${d.name.toLowerCase()}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${d.icon}</svg>
+      <b>${fmt(d.oz)} oz</b><span>${d.name}</span></button>`).join('');
+}
+function renderToday() {
+  const t = totalFor(today), g = store.goal, b = store.bottle;
+  rawPct = g ? t / g * 100 : 0;
+  target = Math.min(100, rawPct);
+  $('date').textContent = new Date().toLocaleDateString([], { weekday: 'long', month: 'long', day: 'numeric' });
+  $('amount').textContent = fmt(t);
+  $('of').textContent = `of ${fmt(g)} oz`;
+  const status = $('status');
+  if (t >= g) {
+    status.textContent = 'Goal met';
+    status.classList.add('met');
+    $('hint').textContent = t > g ? `${fmt(t - g)} oz past your goal` : 'Right on target';
   } else {
-    list.innerHTML = [...todayLog].reverse().map((e,i) => `
-      <div class="log-item">
-        <div class="log-item-left"><div class="log-drop"></div><span class="log-item-oz">${e.oz} oz</span></div>
-        <span class="log-item-time">${e.time}</span>
-        <button class="log-remove" onclick="removeEntry(${todayLog.length-1-i})">×</button>
-      </div>
-    `).join('');
+    status.textContent = `${fmt(g - t)} oz to go`;
+    status.classList.remove('met');
+    const n = Math.ceil((g - t) / b);
+    $('hint').textContent = `About ${n} more ${fmt(b)} oz bottle${n === 1 ? '' : 's'}`;
   }
-  saveData();
-  renderHistory();
+  $('figure').setAttribute('aria-label', `${Math.round(rawPct)}% of daily goal`);
+
+  const entries = list(today);
+  $('empty').hidden = entries.length > 0;
+  $('clear').hidden = entries.length === 0;
+  $('log').innerHTML = entries.slice().reverse().map(e => {
+    const name = drinkName(e.oz);
+    const time = e.t ? new Date(e.t).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : '';
+    return `<li><i class="dot"></i><span class="oz">${fmt(e.oz)} oz${name ? `<span>${name}</span>` : ''}</span>
+      <time>${time}</time>
+      <button class="rm" data-id="${e.id}" aria-label="Remove ${fmt(e.oz)} oz${time ? ' from ' + time : ''}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></li>`;
+  }).join('');
+  startLoop();
+  if (reduceMotion) { level = target; draw(); }
 }
 
+let seq = 0, lastAdded = null, toastTimer = 0;
+function add(oz) {
+  if (!(oz > 0)) return;
+  const e = { oz, t: Date.now(), id: 'e' + Date.now().toString(36) + (seq++) };
+  (store.days[today] ||= []).push(e);
+  store.goals[today] = store.goal;
+  save();
+  renderToday();
+  splash(oz);
+  lastAdded = e.id;
+  $('toast-text').textContent = `Added ${fmt(oz)} oz`;
+  $('toast').classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => $('toast').classList.remove('show'), 4000);
+}
+function remove(id) {
+  store.days[today] = list(today).filter(e => e.id !== id);
+  save();
+  renderToday();
+}
+
+$('chips').addEventListener('click', e => {
+  const btn = e.target.closest('.chip');
+  if (btn) add(+btn.dataset.oz);
+});
+function addCustom() {
+  const v = parseFloat($('custom').value);
+  if (!(v >= 1 && v <= 200)) { $('custom-error').textContent = 'Enter an amount between 1 and 200 oz.'; return; }
+  $('custom-error').textContent = '';
+  $('custom').value = '';
+  add(Math.round(v * 10) / 10);
+}
+$('custom-add').addEventListener('click', addCustom);
+$('custom').addEventListener('keydown', e => { if (e.key === 'Enter') addCustom(); });
+$('custom').addEventListener('input', () => { $('custom-error').textContent = ''; });
+$('log').addEventListener('click', e => {
+  const btn = e.target.closest('.rm');
+  if (btn) remove(btn.dataset.id);
+});
+$('undo').addEventListener('click', () => {
+  if (lastAdded) remove(lastAdded);
+  lastAdded = null;
+  $('toast').classList.remove('show');
+});
+let clearArmed = 0;
+$('clear').addEventListener('click', () => {
+  const btn = $('clear');
+  if (!clearArmed) {
+    btn.textContent = 'Tap again to clear';
+    btn.classList.add('confirm');
+    clearArmed = setTimeout(() => { clearArmed = 0; btn.textContent = 'Clear all'; btn.classList.remove('confirm'); }, 3000);
+    return;
+  }
+  clearTimeout(clearArmed); clearArmed = 0;
+  btn.textContent = 'Clear all'; btn.classList.remove('confirm');
+  store.days[today] = [];
+  save();
+  renderToday();
+});
+
+/* ---------- history ---------- */
+function streak() {
+  let n = 0;
+  const d = new Date();
+  if (totalFor(dayKey(d)) < goalFor(dayKey(d))) d.setDate(d.getDate() - 1);
+  for (let i = 0; i < 730; i++) {
+    const k = dayKey(d);
+    if (totalFor(k) > 0 && totalFor(k) >= goalFor(k)) { n++; d.setDate(d.getDate() - 1); } else break;
+  }
+  return n;
+}
 function renderHistory() {
-  const data = loadData();
-  const days = data.days || {};
-  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const labels = [], values = [];
+  const days = [];
   for (let i = 6; i >= 0; i--) {
     const d = new Date(); d.setDate(d.getDate() - i);
-    labels.push(i === 0 ? 'Today' : dayNames[d.getDay()]);
-    values.push((days[d.toISOString().slice(0,10)] || []).reduce((s,v) => s+v, 0));
+    const k = dayKey(d);
+    days.push({ k, label: i === 0 ? 'Today' : d.toLocaleDateString([], { weekday: 'short' }), total: totalFor(k), goal: goalFor(k), today: i === 0 });
   }
-  const maxVal = Math.max(goal * 1.2, ...values, 10);
-  const chartArea = document.getElementById('chart-area');
-  chartArea.innerHTML = '';
-  const gl = document.createElement('div');
-  gl.className = 'goal-line';
-  gl.style.bottom = Math.min(100, (goal / maxVal) * 100) + '%';
-  chartArea.appendChild(gl);
-  labels.forEach((lbl, i) => {
-    const oz = values[i];
-    const col = document.createElement('div'); col.className = 'bar-col';
-    const ve = document.createElement('div'); ve.className = 'bar-val'; ve.textContent = oz > 0 ? oz : '';
-    const outer = document.createElement('div'); outer.className = 'bar-outer';
-    const inner = document.createElement('div');
-    inner.className = 'bar-inner' + (oz >= goal && oz > 0 ? ' hit' : '');
-    inner.style.height = Math.round((oz / maxVal) * 100) + '%';
-    const le = document.createElement('div'); le.className = 'bar-label'; le.textContent = lbl;
-    outer.appendChild(inner); col.appendChild(ve); col.appendChild(outer); col.appendChild(le);
-    chartArea.appendChild(col);
-  });
-  const dwd = values.filter(v => v > 0);
-  document.getElementById('h-avg').textContent = dwd.length ? Math.round(dwd.reduce((s,v)=>s+v,0)/dwd.length) : '—';
-  document.getElementById('h-best').textContent = Math.max(...values) || '—';
-  document.getElementById('h-hit').textContent = values.filter(v => v >= goal).length + '/7';
-  let streak = 0;
-  for (let i = 6; i >= 0; i--) { if (values[i] >= goal) streak++; else break; }
-  document.getElementById('streak-num').textContent = streak;
+  const logged = days.filter(d => d.total > 0);
+  const met = days.filter(d => d.total > 0 && d.total >= d.goal).length;
+  $('hist-summary').textContent = logged.length
+    ? `You met your goal on ${met} of the last 7 days.`
+    : 'Log a drink on the Today tab and your week will show up here.';
+  const max = Math.max(store.goal * 1.15, ...days.map(d => d.total), 10);
+  const goalPct = store.goal / max * 100;
+  $('chart').setAttribute('aria-label', days.map(d => `${d.label}: ${fmt(d.total)} oz`).join(', '));
+  $('chart').innerHTML = days.map(d => `
+    <div class="col${d.today ? ' today' : ''}">
+      <span class="val">${d.total ? fmt(d.total) : ''}</span>
+      <div class="tube${d.total && d.total >= d.goal ? ' hit' : ''}"><i style="height:0%" data-h="${Math.min(100, d.total / max * 100).toFixed(1)}"></i></div>
+      <span class="day">${d.label}</span>
+    </div>`).join('') +
+    `<div class="chart-plot"><div class="goal-line" style="bottom:${goalPct.toFixed(1)}%"><span>${fmt(store.goal)} oz goal</span></div></div>`;
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    document.querySelectorAll('.tube i').forEach(i => { i.style.height = i.dataset.h + '%'; });
+  }));
+  $('f-avg').innerHTML = logged.length ? `${fmt(Math.round(logged.reduce((s, d) => s + d.total, 0) / logged.length))}<small>oz</small>` : '0<small>oz</small>';
+  $('f-best').innerHTML = `${fmt(Math.max(0, ...days.map(d => d.total)))}<small>oz</small>`;
+  const s = streak();
+  $('f-streak').innerHTML = `${s}<small>${s === 1 ? 'day' : 'days'}</small>`;
 }
 
-function addWater(oz) { todayLog.push({oz, time: getTime()}); render(); }
-function addCustom() {
-  const input = document.getElementById('custom-oz');
-  const val = parseFloat(input.value);
-  if (!val || val <= 0) return;
-  addWater(val); input.value = '';
+/* ---------- navigation ---------- */
+function show(view) {
+  document.querySelectorAll('.tab').forEach(t => { if (t.dataset.view === view) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current'); });
+  $('view-today').hidden = view !== 'today';
+  $('view-history').hidden = view !== 'history';
+  if (view === 'history') { stopLoop(); renderHistory(); }
+  else startLoop();
+  window.scrollTo(0, 0);
 }
-function removeEntry(idx) { todayLog.splice(idx, 1); render(); }
-function clearAll() { todayLog = []; render(); }
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => show(t.dataset.view)));
 
-function switchTab(tab) {
-  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', (i===0&&tab==='tracker')||(i===1&&tab==='history')));
-  document.getElementById('page-tracker').classList.toggle('active', tab === 'tracker');
-  document.getElementById('page-history').classList.toggle('active', tab === 'history');
-  if (tab === 'history') renderHistory();
-}
-
-document.getElementById('goal-input').addEventListener('input', e => {
-  const val = parseFloat(e.target.value);
-  if (val && val > 0) { goal = val; render(); }
+/* ---------- settings ---------- */
+const dlg = $('settings');
+$('open-settings').addEventListener('click', () => {
+  $('goal-input').value = store.goal;
+  $('bottle-input').value = store.bottle;
+  if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', '');
 });
-document.getElementById('custom-oz').addEventListener('keydown', e => { if (e.key === 'Enter') addCustom(); });
-document.getElementById('date-label').textContent = new Date().toLocaleDateString([],{weekday:'long',month:'long',day:'numeric'});
+dlg.addEventListener('click', e => {
+  const b = e.target.closest('[data-step]');
+  if (b) {
+    const inp = $(b.dataset.step + '-input');
+    const step = b.dataset.step === 'goal' ? 4 : 1;
+    const v = (parseFloat(inp.value) || 0) + step * +b.dataset.dir;
+    inp.value = Math.min(+inp.max, Math.max(+inp.min, v));
+    return;
+  }
+  if (e.target === dlg) dlg.close();
+});
+$('settings-cancel').addEventListener('click', () => dlg.close());
+$('settings-save').addEventListener('click', () => {
+  const g = parseFloat($('goal-input').value), b = parseFloat($('bottle-input').value);
+  if (g >= 8 && g <= 400) store.goal = Math.round(g);
+  if (b >= 4 && b <= 128) store.bottle = Math.round(b);
+  if (list(today).length) store.goals[today] = store.goal;
+  save();
+  dlg.close();
+  renderChips();
+  renderToday();
+  if (!$('view-history').hidden) renderHistory();
+});
 
-init();
+/* ---------- lifecycle ---------- */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) { stopLoop(); return; }
+  store = load();
+  if (dayKey() !== today) today = dayKey();
+  renderChips(); renderToday();
+  if (!$('view-history').hidden) renderHistory();
+});
+
+renderChips();
+renderToday();
+draw();
+})();
 </script>
 </body>
 </html>
